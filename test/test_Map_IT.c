@@ -32,8 +32,9 @@ void test_mapStore_given_Ali_should_add_it_to_map(){
   mapStore(map, person, comparePerson, hash);
   
   TEST_ASSERT_NOT_NULL(map->bucket[3]);
-  TEST_ASSERT_EQUAL_STRING("Ali", ((Person *)((List *)map->bucket[3])->data)->name);
-  TEST_ASSERT_EQUAL_Person(person,(Person *)((List *)map->bucket[3])->data);
+  // TEST_ASSERT_EQUAL_STRING("Ali", ((Person *)((List *)map->bucket[3])->data)->name);
+  // TEST_ASSERT_EQUAL_Person(person,(Person *)((List *)map->bucket[3])->data);
+  TEST_ASSERT_EQUAL_Person("Ali", 25, 70.3, getPersonFromBucket(map->bucket[3]));
 	
 }
 
@@ -52,9 +53,9 @@ void test_mapStore_given_Ali_but_Ali_is_in_the_Map_should_throw_ERR_SAME_ELEMENT
     TEST_FAIL_MESSAGE("Expect ERR_SAME_ELEMENT exception to be thrown.");
   } Catch(e){
     TEST_ASSERT_EQUAL(ERR_SAME_ELEMENT, e);
-    TEST_ASSERT_NOT_NULL(map->bucket[3]);
-    TEST_ASSERT_EQUAL_Person(person, getPersonFromBucket(map->bucket[3]));
-
+    // TEST_ASSERT_NOT_NULL(map->bucket[3]);
+    // TEST_ASSERT_EQUAL_Person(person, getPersonFromBucket(map->bucket[3]));
+    TEST_ASSERT_EQUAL_Person("Ali", 25, 70.3, getPersonFromBucket(map->bucket[3]));
   }
 
 }
@@ -72,9 +73,9 @@ void test_mapStore_given_zorro_should_add_it_to_map(){
   mapStore(map, person2, comparePerson, hash);
   
   TEST_ASSERT_NOT_NULL(map->bucket[3]);
-  TEST_ASSERT_EQUAL_STRING("Zorro", ((Person *)((List *)map->bucket[3])->data)->name);
-  TEST_ASSERT_EQUAL_Person(person2,(Person *)((List *)map->bucket[3])->data);
-	
+  // TEST_ASSERT_EQUAL_STRING("Zorro", ((Person *)((List *)map->bucket[3])->data)->name);
+  // TEST_ASSERT_EQUAL_Person(person2,(Person *)((List *)map->bucket[3])->data);
+	TEST_ASSERT_EQUAL_Person("Zorro", 40, 100.3, getPersonFromBucket(map->bucket[3]));
 }
 
 void test_comparePerson_ali_with_ali_return_1(){
@@ -86,7 +87,6 @@ void test_comparePerson_ali_with_ali_return_1(){
   
   TEST_ASSERT_EQUAL(1, result);  
 }
-
 
 void test_mapFind_ali_should_return_ali(){
   Person *person1 = personNew("Ali", 25, 70.3); 
@@ -101,16 +101,145 @@ void test_mapFind_ali_should_return_ali(){
   TEST_ASSERT_EQUAL_STRING("Ali", result->name);
 }
 
-void test_mapFind_ali_should_return_NULL(){
+void test_mapFind_nope_should_return_NULL(){
   Person *person1 = personNew("Ali", 25, 70.3); 
+  Person *shouldFind = personNew("Nope", 25, 70.3); 
   Map *map = mapNew(5);
   Person *result;
   List *list = listNew(person1, NULL);
   
   map->bucket[3] = list;
-  hash_ExpectAndReturn(person1, 3);
+  hash_ExpectAndReturn(shouldFind, 3);
   
-  result = mapFind(map, person1, comparePerson, hash);
+  result = mapFind(map, shouldFind, comparePerson, hash);
+
+  TEST_ASSERT_NULL(result);
+}
+
+void test_mapFind_ali_in_a_list(){
+  Person *person1 = personNew("Ali", 25, 70.3); 
+  Person *person2 = personNew("Zorro", 50, 100.3); 
+  Person *shouldFind = personNew("Zorro", 50, 100.3); 
+  Map *map = mapNew(5);
+  Person *result;
+  List *list = listNew(person1, NULL);
+  list = listNew(person2, list);
+  
+  map->bucket[3] = list;
+  hash_ExpectAndReturn(shouldFind, 3);
+  
+  result = mapFind(map, shouldFind, comparePerson, hash);
+
+  TEST_ASSERT_EQUAL_STRING("Zorro", result->name);
+}
+
+void test_mapFind_Nope_in_a_list_should_return_null(){
+  Person *person1 = personNew("Ali", 25, 70.3); 
+  Person *person2 = personNew("Zorro", 50, 100.3); 
+  Person *shouldFind = personNew("Nope", 50, 100.3); 
+  Map *map = mapNew(5);
+  Person *result;
+  List *list = listNew(person1, NULL);
+  list = listNew(person2, list);
+  
+  map->bucket[3] = list;
+  hash_ExpectAndReturn(shouldFind, 3);
+  
+  result = mapFind(map, shouldFind, comparePerson, hash);
+
+  TEST_ASSERT_NULL(result);
+}
+
+void test_mapRemove_should_remove_Ali(){
+  Person *person1 = personNew("Ali", 25, 70.3); 
+  Person *personRemove = personNew("Ali", 25, 70.3); 
+  Map *map = mapNew(5);
+  Person *result;
+  List *list = listNew(person1, NULL);
+  
+  map->bucket[3] = list;
+  hash_ExpectAndReturn(personRemove, 3);
+  result = mapRemove(map, personRemove, comparePerson, hash);
 
   TEST_ASSERT_EQUAL_STRING("Ali", result->name);
 }
+
+void test_mapRemove_nope_should_return_NULL(){
+  Person *person1 = personNew("Ali", 25, 70.3); 
+  Person *personRemove = personNew("Nope", 25, 70.3); 
+  Map *map = mapNew(5);
+  Person *result;
+  List *list = listNew(person1, NULL);
+  
+  map->bucket[3] = list;
+  hash_ExpectAndReturn(personRemove, 3);
+  
+  result = mapRemove(map, personRemove, comparePerson, hash);
+
+  TEST_ASSERT_NULL(result);
+}
+
+void test_mapRemove_should_remove_ali_in_the_list(){
+  Person *person1 = personNew("Ali", 25, 70.3); 
+  Person *person2 = personNew("Zorro", 50, 100.3); 
+  Person *personRemove = personNew("Ali", 50, 100.3); 
+  Map *map = mapNew(5);
+  Person *result;
+  List *list = listNew(person1, NULL);
+  list = listNew(person2, list);
+  
+  map->bucket[3] = list;
+  hash_ExpectAndReturn(personRemove, 3);
+  
+  result = mapRemove(map, personRemove, comparePerson, hash);
+
+  TEST_ASSERT_EQUAL_STRING("Ali", result->name);
+  TEST_ASSERT_NULL(list->next);
+}
+
+void test_mapRemove_nope_in_a_list_should_return_null(){
+  Person *person1 = personNew("Ali", 25, 70.3); 
+  Person *person2 = personNew("Zorro", 50, 100.3); 
+  Person *personRemove = personNew("Nope", 50, 100.3); 
+  Map *map = mapNew(5);
+  Person *result;
+  List *list = listNew(person1, NULL);
+  list = listNew(person2, list);
+  
+  map->bucket[3] = list;
+  hash_ExpectAndReturn(personRemove, 3);
+  
+  result = mapRemove(map, personRemove, comparePerson, hash);
+
+  TEST_ASSERT_NULL(result);
+}
+
+void test_mapRemove_should_remove_Loco_in_the_list(){
+  Person *person1 = personNew("Ali", 25, 70.3); 
+  Person *person2 = personNew("Zorro", 50, 100.3); 
+  Person *person3 = personNew("Loco", 30, 50.3); 
+  Person *personRemove = personNew("Zorro", 50, 100.3); 
+  Map *map = mapNew(5);
+  Person *result;
+  List *list = listNew(person1, NULL);
+  list = listNew(person2, list);
+  list = listNew(person3, list);
+  
+  map->bucket[3] = list;
+  hash_ExpectAndReturn(personRemove, 3);
+  
+  result = mapRemove(map, personRemove, comparePerson, hash);
+
+  TEST_ASSERT_EQUAL_STRING("Zorro", result->name);
+  TEST_ASSERT_NULL((list->next)->next);
+  TEST_ASSERT_EQUAL_Person("Loco", 30, 50.3, getPersonFromBucket(map->bucket[3]));
+  
+}
+
+
+
+
+
+
+
+
