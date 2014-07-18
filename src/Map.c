@@ -14,6 +14,13 @@ Map *mapNew(int length){
   return map;
 }
 
+/*
+ * input: map = the map
+ *        element = element to remove
+ *        compare = to compare 2 elements 
+ *        hash = hash function
+ *
+ */
 void mapStore(Map *map, void *element, int (*compare)(void *, void *), unsigned int(*hash)(void *)){
   List *list;
   int index;
@@ -31,6 +38,13 @@ void mapStore(Map *map, void *element, int (*compare)(void *, void *), unsigned 
   map->bucket[index] = list;
 }
 
+/*
+ * input: map = the map
+ *        element = element to remove
+ *        compare = to compare 2 elements 
+ *        hash = hash function
+ *
+ */
 void *mapFind(Map *map, void *element, int (*compare)(void *, void *), unsigned int(*hash)(void *)){
   Person *person;
   List *list;
@@ -58,6 +72,13 @@ void *mapFind(Map *map, void *element, int (*compare)(void *, void *), unsigned 
   }
 }
 
+/*
+ * input: map = the map
+ *        element = element to remove
+ *        compare = to compare 2 elements 
+ *        hash = hash function
+ *
+ */
 void *mapRemove(Map *map, void *element, int (*compare)(void *, void *), unsigned int(*hash)(void *)){
   Person *person;
   Person *toRemove;
@@ -94,6 +115,13 @@ void *mapRemove(Map *map, void *element, int (*compare)(void *, void *), unsigne
   }
 }
 
+/*
+ * input: map = the map
+ *        element = element to remove
+ *        compare = to compare 2 elements 
+ *        hash = hash function
+ *
+ */
 void mapLinearStore(Map *map, void *element, int (*compare)(void *, void *), unsigned int(*hash)(void *)){
   int index;
   
@@ -101,52 +129,103 @@ void mapLinearStore(Map *map, void *element, int (*compare)(void *, void *), uns
   
   void *currentBucket = map->bucket[index];
   
-  while(map->length >= index){
-    if(map->bucket[index] != NULL){
+  while((map->length)-1 >= index){
+    if(map->bucket[index] != NULL){                           //if element not null
       
-      if(comparePerson(map->bucket[index], element) == 1)
+      if(comparePerson(map->bucket[index], element) == 1)     //if same element throw error
         Throw(ERR_SAME_ELEMENT);
       
       else if(map->bucket[index] != NULL)
         index++;
     }
     
-    else if(isBucketEmpty(currentBucket)){
+    else{
       map->bucket[index] = element;
       return;
     }
   }
-
   
-  if(index > map->length){
+  if(index > (map->length)-1){                                //if exceed bucket throw error
     Throw(ERR_EXCEED_BUCKET);
   }
 }
 
+/*
+ * input: map = the map
+ *        element = element to remove
+ *        compare = to compare 2 elements 
+ *        hash = hash function
+ *
+ */
 void *mapLinearFind(Map *map, void *element, int (*compare)(void *, void *), unsigned int(*hash)(void *)){
   Person *person;
   int index;
   
   index = hash(element);
-  
-  if(comparePerson(map->bucket[index], element) == 1){
-    person = (Person *)element;
-    return person;
-  }
-  
-  else if(comparePerson(map->bucket[index], element) == 0){
-    index++;
-      
-    if(map->bucket[index] == NULL)
-      return NULL;
+  void *currentBucket = map->bucket[index];
+
+  if(isBucketMarked(map->bucket[index]) || map->bucket[index] != NULL){ //check if current element is marked or not null
     
-    else if(comparePerson(map->bucket[index], element) == 1){
-      person = (Person *)element;
-      return person;
+    while((map->length)-1 >= index){                                    //loop if map length is shorter than index, stop when index exceeds bucket length
+      
+      if(isBucketMarked(map->bucket[index])){
+        index++;
+      }
+      
+      else if(comparePerson(map->bucket[index], element) == 1){
+          person = ((Person *)map->bucket[index]);
+          return person;
+      }
+      
+      else
+        index++;
     }
+    
+    return NULL;
   }
+  
 }
 
+/*
+ * input: map = the map
+ *        element = element to remove
+ *        compare = to compare 2 elements 
+ *        hash = hash function
+ *
+ */
 void *mapLinearRemove(Map *map, void *element, int (*compare)(void *, void *), unsigned int(*hash)(void *)){
+  Person *person;
+  int index;
+  
+  index = hash(element);
+  void *currentBucket = map->bucket[index];
 
+  if(isBucketMarked(map->bucket[index]) || map->bucket[index] != NULL){  //check if current element is marked or not null
+    
+    while((map->length)-1 >= index){                                     //loop if map length is shorter than index, stop when index exceeds bucket length
+      
+      if(isBucketMarked(map->bucket[index])){
+        index++;
+      }
+      
+      else if(comparePerson(map->bucket[index], element) == 1){
+          person = ((Person *)map->bucket[index]);
+            
+          if(map->bucket[index+1] == NULL || index+1 > (map->length)-1){ //to check if next element is null or next element exceeds the bucket
+            map->bucket[index] = NULL;                                   //null contents if exceeds bucket length or next element is null
+            while(isBucketMarked(map->bucket[index-1])){                 //loop to null previous element if previous element is marked
+              map->bucket[index-1] = NULL;
+              index--;
+            }
+          }
+          else if(map->bucket[index+1] != NULL)                          //if next element is not null then mark current element
+            map->bucket[index] = (void *)-1;
+           
+          return person;
+      }   
+      else
+        index++;
+    }   
+    return NULL;
+  }
 }

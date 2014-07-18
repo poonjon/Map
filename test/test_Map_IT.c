@@ -286,64 +286,251 @@ void test_mapLinearStore_given_zorro_should_add_it_to_map(){
 	TEST_ASSERT_EQUAL_Person("Zorro", 40, 100.3, map->bucket[4]);
 }
 
-void test_mapLinearStore_given_Lina_should_add_it_to_map(){
-  Person *person1 = personNew("Ali", 25, 70.3); 
-  Person *person2 = personNew("Zorro", 40, 100.3); 
-  Person *person3 = personNew("Lina", 18, 45.3); 
-  Map *map = mapNew(5);
-  
-  hash_ExpectAndReturn(person1, 3);
-  hash_ExpectAndReturn(person2, 3);
-  hash_ExpectAndReturn(person3, 3);
-  
-  
-  mapLinearStore(map, person1, comparePerson, hash);
-  mapLinearStore(map, person2, comparePerson, hash);
-  mapLinearStore(map, person3, comparePerson, hash);
-  
-  TEST_ASSERT_NOT_NULL(map->bucket[3]);
-	TEST_ASSERT_EQUAL_Person("Ali", 25, 70.3, map->bucket[3]);
-	TEST_ASSERT_EQUAL_Person("Zorro", 40, 100.3, map->bucket[4]);
-	TEST_ASSERT_EQUAL_Person("Lina", 18, 45.3, map->bucket[5]);
-}
-
 void test_mapLinearStore_given_Rylai_but_exceed_length_should_throw_ERR_EXCEED_BUCKET_exception(){
   CEXCEPTION_T e;
   Person *person1 = personNew("Ali", 25, 70.3); 
   Person *person2 = personNew("Zorro", 40, 100.3); 
-  Person *person3 = personNew("Lina", 18, 45.3); 
-  Person *person4 = personNew("Rylai", 18, 45.3); 
+  Person *person3 = personNew("Rylai", 18, 45.3); 
   Map *map = mapNew(5);
   
   hash_ExpectAndReturn(person1, 3);
   hash_ExpectAndReturn(person2, 3);
   hash_ExpectAndReturn(person3, 3);
-  hash_ExpectAndReturn(person4, 3);
   
-    Try{
+  Try{
     mapLinearStore(map, person1, comparePerson, hash);
     mapLinearStore(map, person2, comparePerson, hash);
     mapLinearStore(map, person3, comparePerson, hash);
-    mapLinearStore(map, person4, comparePerson, hash);
     TEST_FAIL_MESSAGE("Expect ERR_EXCEED_BUCKET exception to be thrown.");
   } Catch(e){
     TEST_ASSERT_EQUAL(ERR_EXCEED_BUCKET, e);
     TEST_ASSERT_EQUAL_Person("Ali", 25, 70.3, map->bucket[3]);
     TEST_ASSERT_EQUAL_Person("Zorro", 40, 100.3, map->bucket[4]);
-    TEST_ASSERT_EQUAL_Person("Lina", 18, 45.3, map->bucket[5]);
   }
 
 }
 
-// void test_mapLinearFind_ali_should_return_ali(){
-  // Person *person1 = personNew("Ali", 25, 70.3); 
-  // Map *map = mapNew(5);
-  // Person *result;
-
-  // hash_ExpectAndReturn(person1, 3);
+void test_mapLinearFind_ali_should_return_ali(){
+  Person *person1 = personNew("Ali", 25, 70.3); 
+  Map *map = mapNew(5);
+  Person *result;
+  map->bucket[3] = person1;
+  hash_ExpectAndReturn(person1, 3);
   
-  // result = mapLinearFind(map, person1, comparePerson, hash);
+  result = mapLinearFind(map, person1, comparePerson, hash);
 
-  // TEST_ASSERT_EQUAL_STRING("Ali", result->name);
-// }
+  TEST_ASSERT_EQUAL_STRING("Ali", result->name);
+}
+
+void test_mapLinearFind_abu_should_return_ali(){
+  Person *person1 = personNew("Ali", 25, 70.3); 
+  Person *person2 = personNew("Abu", 45, 123.3); 
+  Person *personToFind = personNew("Abu", 45, 123.3); 
+  Map *map = mapNew(5);
+  Person *result;
+  map->bucket[3] = person1;
+  map->bucket[4] = person2;
+  
+  hash_ExpectAndReturn(personToFind, 4);
+  
+  
+  result = mapLinearFind(map, personToFind, comparePerson, hash);
+
+  TEST_ASSERT_EQUAL_STRING("Abu", result->name);
+}
+
+void test_mapLinearFind_abu_with_marked_should_return_abu(){
+  Person *person1 = personNew("Abu", 45, 123.3); 
+  Person *personToFind = personNew("Abu", 45, 123.3); 
+  Map *map = mapNew(5);
+  Person *result;
+  map->bucket[3] = (void *)-1;
+  map->bucket[4] = person1;
+  
+  
+  hash_ExpectAndReturn(personToFind, 3);
+  
+  
+  result = mapLinearFind(map, personToFind, comparePerson, hash);
+
+  TEST_ASSERT_EQUAL_STRING("Abu", result->name);
+}
+
+void test_mapLinearFind_nope_should_return_NULL(){
+  Person *person1 = personNew("Ali", 76, 75.3); 
+  Person *person2 = personNew("Abu", 45, 123.3); 
+  Person *personToFind = personNew("Nope", 45, 123.3); 
+  Map *map = mapNew(5);
+  Person *result;
+  map->bucket[3] = person1;
+  map->bucket[4] = person2;
+  
+  hash_ExpectAndReturn(personToFind, 3);
+  
+  result = mapLinearFind(map, personToFind, comparePerson, hash);
+
+  TEST_ASSERT_NULL(result);
+}
+
+void test_mapLinearFind_abu_with_marked_should_return_abu_case2(){
+  Person *person1 = personNew("Ali", 78, 75.3); 
+  Person *person3 = personNew("Abu", 45, 123.3); 
+  Person *personToFind = personNew("Abu", 45, 123.3); 
+  Map *map = mapNew(6);
+  Person *result;
+  map->bucket[3] = person1;
+  map->bucket[4] = (void *)-1;
+  map->bucket[5] = person3;
+  
+  hash_ExpectAndReturn(personToFind, 3);
+  
+  result = mapLinearFind(map, personToFind, comparePerson, hash);
+
+  TEST_ASSERT_EQUAL_STRING("Abu", result->name);
+}
+
+void test_mapLinearRemove_Ali_should_null(){
+  Person *person1 = personNew("Ali", 78, 75.3); 
+  Person *personToRemove = personNew("Ali", 78, 75.3); 
+  Map *map = mapNew(5);
+  Person *mark;
+  map->bucket[3] = person1;
+  
+  hash_ExpectAndReturn(personToRemove, 3);
+  
+  mark = mapLinearRemove(map, personToRemove, comparePerson, hash);
+
+  TEST_ASSERT_EQUAL_STRING("Ali", mark->name);
+  TEST_ASSERT_NULL(map->bucket[3]);
+}
+
+void test_mapLinearRemove_Ali_should_mark(){
+  Person *person1 = personNew("Ali", 78, 75.3); 
+  Person *person2 = personNew("Abu", 56, 100.3); 
+  Person *personToRemove = personNew("Ali", 78, 75.3); 
+  Map *map = mapNew(5);
+  Person *mark;
+  map->bucket[3] = person1;
+  map->bucket[4] = person2;
+  
+  hash_ExpectAndReturn(personToRemove, 3);
+  
+  mark = mapLinearRemove(map, personToRemove, comparePerson, hash);
+
+  TEST_ASSERT_EQUAL_STRING("Ali", mark->name);
+  TEST_ASSERT_EQUAL_PTR(-1, map->bucket[3]);
+}
+
+void test_mapLinearRemove_Abu_should_null(){
+  Person *person1 = personNew("Ali", 78, 75.3); 
+  Person *person2 = personNew("Abu", 56, 100.3); 
+  Person *personToRemove = personNew("Abu", 56, 100.3);
+  Map *map = mapNew(5);
+  Person *mark;
+  map->bucket[3] = person1;
+  map->bucket[4] = person2;
+  
+  hash_ExpectAndReturn(personToRemove, 3);
+  
+  mark = mapLinearRemove(map, personToRemove, comparePerson, hash);
+
+  TEST_ASSERT_EQUAL_STRING("Abu", mark->name);
+  TEST_ASSERT_NULL(map->bucket[4]);
+}
+
+void test_mapLinearRemove_Abu_should_mark(){
+  Person *person1 = personNew("Ali", 78, 75.3); 
+  Person *person2 = personNew("Abu", 56, 100.3); 
+  Person *person3 = personNew("Rylai", 18, 45.3); 
+  Person *personToRemove = personNew("Abu", 56, 100.3); 
+  Map *map = mapNew(6);
+  Person *mark;
+  map->bucket[3] = person1;
+  map->bucket[4] = person2;
+  map->bucket[5] = person3;
+  
+  hash_ExpectAndReturn(personToRemove, 3);
+  
+  mark = mapLinearRemove(map, personToRemove, comparePerson, hash);
+
+  TEST_ASSERT_EQUAL_STRING("Abu", mark->name);
+  TEST_ASSERT_EQUAL_PTR(-1, map->bucket[4]);
+}
+
+void test_mapLinearRemove_Abu_should_mark_case2(){
+  
+  Person *person2 = personNew("Abu", 56, 100.3); 
+  Person *person3 = personNew("Rylai", 18, 45.3); 
+  Person *personToRemove = personNew("Abu", 56, 100.3); 
+  Map *map = mapNew(6);
+  Person *mark;
+  map->bucket[3] = (void *)-1;
+  map->bucket[4] = person2;
+  map->bucket[5] = person3;
+  
+  hash_ExpectAndReturn(personToRemove, 3);
+  
+  mark = mapLinearRemove(map, personToRemove, comparePerson, hash);
+
+  TEST_ASSERT_EQUAL_STRING("Abu", mark->name);
+  TEST_ASSERT_EQUAL_PTR(-1, map->bucket[4]);
+}
+
+void test_mapLinearRemove_Ami_but_not_found_should_return_null(){
+  
+  Person *person2 = personNew("Abu", 56, 100.3); 
+  Person *person3 = personNew("Rylai", 18, 45.3); 
+  Person *personToRemove = personNew("Ami", 780, 50.3); 
+  Map *map = mapNew(6);
+  Person *mark;
+  map->bucket[3] = (void *)-1;
+  map->bucket[4] = person2;
+  map->bucket[5] = person3;
+  
+  hash_ExpectAndReturn(personToRemove, 3);
+  
+  mark = mapLinearRemove(map, personToRemove, comparePerson, hash);
+
+  TEST_ASSERT_NULL(mark);
+}
+
+void test_mapLinearRemove_Rylai_should_null_and_null_previous_mark(){
+  
+  Person *person1 = personNew("Abu", 56, 100.3); 
+  Person *person3 = personNew("Rylai", 18, 45.3); 
+  Person *personToRemove = personNew("Rylai", 18, 45.3); 
+  Map *map = mapNew(6);
+  Person *mark;
+  map->bucket[3] = person1;
+  map->bucket[4] = (void *)-1;
+  map->bucket[5] = person3;
+  
+  hash_ExpectAndReturn(personToRemove, 3);
+  
+  mark = mapLinearRemove(map, personToRemove, comparePerson, hash);
+
+  TEST_ASSERT_EQUAL_STRING("Rylai", mark->name);
+  TEST_ASSERT_NULL(map->bucket[5]);
+  TEST_ASSERT_NULL(map->bucket[4]);
+}
+
+void test_mapLinearRemove_Rylai_should_null_and_null_previous_mark_and_null_previous_mark(){
+  
+  Person *person3 = personNew("Rylai", 18, 45.3); 
+  Person *personToRemove = personNew("Rylai", 18, 45.3); 
+  Map *map = mapNew(6);
+  Person *mark;
+  map->bucket[3] = (void *)-1;
+  map->bucket[4] = (void *)-1;
+  map->bucket[5] = person3;
+  
+  hash_ExpectAndReturn(personToRemove, 3);
+  
+  mark = mapLinearRemove(map, personToRemove, comparePerson, hash);
+
+  TEST_ASSERT_EQUAL_STRING("Rylai", mark->name);
+  TEST_ASSERT_NULL(map->bucket[5]);
+  TEST_ASSERT_NULL(map->bucket[4]);
+  TEST_ASSERT_NULL(map->bucket[3]);
+}
 
